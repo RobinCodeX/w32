@@ -1308,20 +1308,74 @@ type SYSTEM_INFO struct {
 }
 
 type NOTIFYICONDATAA struct {
-	cbSize DWORD
-	hWnd HWND
-	uID uint32
-	uFlags uint32
+	cbSize           DWORD
+	hWnd             HWND
+	uID              uint32
+	uFlags           uint32
 	uCallbackMessage uint32
-	hIcon HICON
-	szTip [64]int8
-	dwState DWORD
-	dwStateMask DWORD
-	szInfo [256]int8
-	uTimeout uint32
-	uVersion uint32
-	szInfoTitle [256]int8
-	dwInfoFlags DWORD
-	guidItem GUID
-	hBalloonIcon HICON
+	hIcon            HICON
+	szTip            [64]int8
+	dwState          DWORD
+	dwStateMask      DWORD
+	szInfo           [256]int8
+	uTimeout         uint32
+	uVersion         uint32
+	szInfoTitle      [256]int8
+	dwInfoFlags      DWORD
+	guidItem         GUID
+	hBalloonIcon     HICON
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-taskdialogconfig
+type TASKDIALOGCONFIG struct {
+	CbSize                  uint32
+	HwndParent              HWND
+	HInstance               HINSTANCE
+	DwFlags                 TASKDIALOG_FLAGS
+	DwCommonButtons         TASKDIALOG_COMMON_BUTTON_FLAGS
+	PszWindowTitle          *uint16
+	PszMainIcon             *uint16
+	PszMainInstruction      *uint16
+	PszContent              *uint16
+	CButtons                uint32
+	PButtons                unsafe.Pointer
+	NDefaultButton          int32
+	CRadioButtons           uint32
+	PRadioButtons           unsafe.Pointer
+	NDefaultRadioButton     int32
+	PszVerificationText     *uint16
+	PszExpandedInformation  *uint16
+	PszExpandedControlText  *uint16
+	PszCollapsedControlText *uint16
+	PszFooterIcon           *uint16
+	PszFooter               *uint16
+	PfCallback              uintptr
+	LpCallbackData          uintptr
+	CxWidth                 uint32
+}
+
+type TASKDIALOGCONFIG_GOLANG struct {
+	Parent               HWND
+	Instance             HINSTANCE
+	Flags                TASKDIALOG_FLAGS
+	CommonButtons        TASKDIALOG_COMMON_BUTTON_FLAGS
+	WindowTitle          string
+	MainInstruction      string
+	Content              string
+	Buttons              []TASKDIALOG_BUTTON
+	DefaultButton        int32
+	RadioButtons         []TASKDIALOG_BUTTON
+	DefaultRadioButton   int32
+	VerificationText     string
+	ExpandedInformation  string
+	ExpandedControlText  string
+	CollapsedControlText string
+	Footer               string
+	Width                uint32
+}
+
+// https://docs.microsoft.com/en-us/windows/win32/api/commctrl/ns-commctrl-taskdialog_button
+type TASKDIALOG_BUTTON struct {
+	ButtonID   int32
+	ButtonText *uint16
 }

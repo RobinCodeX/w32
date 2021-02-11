@@ -5,6 +5,7 @@
 package w32
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 )
@@ -21,6 +22,7 @@ var (
 	procImageList_SetImageCount = modcomctl32.NewProc("ImageList_SetImageCount")
 	procInitCommonControlsEx    = modcomctl32.NewProc("InitCommonControlsEx")
 	procTrackMouseEvent         = modcomctl32.NewProc("_TrackMouseEvent")
+	procTaskDialogIndirect      = modcomctl32.NewProc("TaskDialogIndirect")
 )
 
 func InitCommonControlsEx(lpInitCtrls *INITCOMMONCONTROLSEX) bool {
@@ -106,4 +108,66 @@ func TrackMouseEvent(tme *TRACKMOUSEEVENT) bool {
 		uintptr(unsafe.Pointer(tme)))
 
 	return ret != 0
+}
+
+func TaskDialogIndirect(config *TASKDIALOGCONFIG_GOLANG) (int32, int32, bool) {
+	conf := TASKDIALOGCONFIG{}
+	conf.CbSize = uint32(unsafe.Sizeof(conf))
+	conf.HwndParent = config.Parent
+	conf.HInstance = config.Instance
+	conf.DwFlags = config.Flags
+	conf.DwCommonButtons = config.CommonButtons
+	conf.CxWidth = config.Width
+
+	// Some text
+	if config.WindowTitle != "" {
+		conf.PszWindowTitle = syscall.StringToUTF16Ptr(config.WindowTitle)
+	}
+	if config.MainInstruction != "" {
+		conf.PszMainInstruction = syscall.StringToUTF16Ptr(config.MainInstruction)
+	}
+	if config.Content != "" {
+		conf.PszContent = syscall.StringToUTF16Ptr(config.Content)
+	}
+	if config.VerificationText != "" {
+		conf.PszVerificationText = syscall.StringToUTF16Ptr(config.VerificationText)
+	}
+	if config.ExpandedInformation != "" {
+		conf.PszExpandedInformation = syscall.StringToUTF16Ptr(config.ExpandedInformation)
+	}
+	if config.ExpandedControlText != "" {
+		conf.PszExpandedControlText = syscall.StringToUTF16Ptr(config.ExpandedControlText)
+	}
+	if config.CollapsedControlText != "" {
+		conf.PszCollapsedControlText = syscall.StringToUTF16Ptr(config.CollapsedControlText)
+	}
+	if config.Footer != "" {
+		conf.PszFooter = syscall.StringToUTF16Ptr(config.Footer)
+	}
+
+	conf.CButtons = uint32(len(config.Buttons))
+	conf.PButtons = unsafe.Pointer(&config.Buttons[0])
+	conf.NDefaultButton = config.DefaultButton
+
+	if len(config.RadioButtons) > 0 {
+		conf.CRadioButtons = uint32(len(config.RadioButtons))
+		conf.PRadioButtons = unsafe.Pointer(&config.RadioButtons[0])
+		conf.NDefaultRadioButton = config.DefaultRadioButton
+	}
+
+	buttonID := int32(0)
+	radioButtonID := int32(0)
+	verification := BoolToBOOL(false)
+	a, b, c := procTaskDialogIndirect.Call(
+		uintptr(unsafe.Pointer(&conf)),
+		uintptr(buttonID),
+		uintptr(radioButtonID),
+		uintptr(verification))
+
+	fmt.Println(a, b, c)
+	fmt.Println(buttonID, radioButtonID, verification)
+	if a == S_OK {
+		return buttonID, radioButtonID, verification > 0
+	}
+	return 0, 0, false
 }
